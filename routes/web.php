@@ -27,21 +27,21 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', Welcome::class);
 
-Route::get('/counter', Counter::class);
-Route::get('/users', Users::class);
-Route::get('/projects', Projects::class);
-Route::get('/projects/create', CreateProject::class);
-Route::get('/projects/{project}', AllRequests::class);
-Route::get('/projects/view/{request}', ViewRequest::class);  
-Route::get('/projects/view/{project}', ViewRequest::class);  
-Route::get('/projects/{project}/sprints', ProjectSprints::class);  
-Route::get('/projects/{project}/view/task/{task}', ViewTask::class);  
-// Route::get('/view/task/replies/{replied_comment}', ViewRepliedComments::class);  
-Route::get('/users/create', CreateUser::class);
-Route::get('/customers', Customers::class);
+// Route::get('/counter', Counter::class);
+Route::get('/', Welcome::class);
 Route::get('/signIn', SignIn::class)->name('login')->middleware('guest');
 Route::middleware(['auth'])->group(function () {
+    Route::get('/users', Users::class);
+    Route::get('/projects', Projects::class);
+    Route::get('/projects/create', CreateProject::class);
+    Route::get('/projects/{project}', AllRequests::class);
+    Route::get('/projects/view/{request}', ViewRequest::class);
+    Route::get('/projects/view/{project}', ViewRequest::class);
+    Route::get('/projects/{project}/sprints', ProjectSprints::class);
+    Route::get('/projects/{project}/view/task/{task}', ViewTask::class);
+    // Route::get('/view/task/replies/{replied_comment}', ViewRepliedComments::class);  
+    Route::get('/users/create', CreateUser::class);
+    Route::get('/customers', Customers::class);
     Route::get('/home', Home::class)->name('home');
 });

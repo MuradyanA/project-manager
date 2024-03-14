@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('role')->after('email');
+            $table->enum('role', ['Project Owner', 'Scrum Master', 'Development Team'])->after('email');
             $table->unsignedBigInteger('customerId')->nullable()->default(null)->after('role');
             $table->foreign('customerId')->references('id')->on('customers')->onDelete('cascade');
         });

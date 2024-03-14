@@ -5,7 +5,8 @@
             {{ $currentRequest->request }}
         </p>
     </div>
-    <x-CommentSecion  :openedReplyReplingForms="$openedReplyReplingForms" :comments="$comments" :likesDislikes="$likesDislikes" :openedReplyForms="$openedReplyForms" :repliedComments="$repliedComments" :showRepliedComments="$showRepliedComments" />
+    <x-CommentSecion :openedReplyReplingForms="$openedReplyReplingForms" :comments="$comments" :likesDislikes="$likesDislikes" :openedReplyForms="$openedReplyForms" :repliedComments="$repliedComments"
+        :showRepliedComments="$showRepliedComments" />
     {{-- <div class="flex flex-col items-center">
         <div class="bg-gray-100 rounded-lg p-4 w-full">
             <h2 class="text-xl text-center text-gray-800 font-bold mb-2">Comments</h2>

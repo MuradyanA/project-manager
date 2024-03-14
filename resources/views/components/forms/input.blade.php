@@ -1,18 +1,18 @@
 @props(['class' => '', 'type' => 'text', 'name', 'caption'])
 <div {{ $attributes->class(['flex my-2 flex-col w-full', $class]) }}>
     <div class="flex flex-col">
-        <label class="font-semibold text-gray-300 w-[30%]">{{ $caption }}</label>
+        <label class="font-semibold text-gray-600 w-[30%]">{{ $caption }}</label>
         <input
-        {{ $attributes->class([
+            {{ $attributes->class([
                 'p-2' => $type != 'checkbox',
                 'p-3 h-4 w-4' => $type == 'checkbox',
-                'bg-[#0a101e]',
+                'bg-gray-200',
                 'h-7 p-4',
                 'text-gray-400',
                 'font-bold',
                 'border-2',
-                'rounded-md',   
-                'border-[#2b3269]'
+                'rounded-md',
+                'border-gray-300',
             ]) }}
             type={{ $type }} name="{{ $name }}" {{ $attributes }} autocomplete="off">
     </div>

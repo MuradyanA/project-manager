@@ -14,7 +14,7 @@
 ])
 <div class="flex flex-col mx-auto items-center w-full">
     {{-- @php
-        dd($repliedComments);
+        dd($comments);
     @endphp --}}
     <div class="bg-gray-100 rounded-lg p-4 w-full">
         <!-- Comment Form -->
@@ -72,7 +72,7 @@
                                 </div>
                                 @foreach ($likesDislikes as $elem)
                                     @php
-                                        // dd($elem, $mainComment)
+                                        dd($elem, $mainComment);
                                     @endphp
                                     @if ($elem['commentId'] == $mainComment->id && $mainComment->main_comment == null)
                                         <div class="flex items-center">
@@ -153,8 +153,11 @@
                             <h3 class="text-lg font-semibold mb-2">Replied Comments:</h3>
                         @endif
                         @php
-                            // dd($repliedComments);
-                            $replies = $repliedComments->filter(fn($value) => $mainComment->id == $value->main_comment);
+                            if ($repliedComments != null) {
+                                $replies = $repliedComments->filter(
+                                    fn($value) => $mainComment->id == $value->main_comment,
+                                );
+                            }
                             // dd($replies);
                         @endphp
                         @if (in_array($mainComment->id, $showRepliedComments))
@@ -175,18 +178,7 @@
                                         <span class="text-sm text-gray-500 mt-1">{{ $repliedComment->created_at }}
                                         </span>
                                         {{-- repliedRepliedComments --}}
-                                        @if (!in_array($repliedComment->c2Id, $openedReplyReplingForms))
-                                            <button title="Reply To Comment"
-                                                wire:click="openReplyReplingForm({{ $repliedComment->id }})"
-                                                class="ml-[3%]">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                                                    class="w-6 h-6 inline">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
-                                                </svg>
-                                            </button>
-                                        @elseif(in_array($repliedComment->id, $openedReplyReplingForms))
+                                        @if(in_array($repliedComment->id, $openedReplyReplingForms))
                                             <button title="Close Reply Form" class="ml-[3%]"
                                                 wire:click="closeReplyReplingForm({{ $repliedComment->id }})">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -198,7 +190,7 @@
                                             </button>
                                         @endif
                                         <hr class="w-[99%] mx-auto mt-4 border-t border-gray-300" />
-                                        <p>{{ dd($repliedComment) }}</p>
+                                        {{-- <p>{{ dd($repliedComment) }}</p> --}}
                                         @if (in_array($repliedComment->id, $openedReplyReplingForms))
                                             <hr class="w-[90%] mx-auto mt-4 border-t border-gray-300">
                                             <div class="ml-[5%] mt-4">

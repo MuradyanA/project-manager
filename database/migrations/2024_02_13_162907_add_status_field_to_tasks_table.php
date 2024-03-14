@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('comments', function (Blueprint $table) {
-            $table->integer('replyTo')->nullable()->default(null)->after('comment');
+        Schema::table('tasks', function (Blueprint $table) {
+            $table->set('status', ['Proposed', 'Active', 'Resolved', 'Closed', 'Rejected'])->default('Proposed')->after('task');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('comments', function (Blueprint $table) {
-            $table->dropColumn('replyTo');
+        Schema::table('tasks', function (Blueprint $table) {
+            $table->dropColumn('status');
         });
     }
 };
