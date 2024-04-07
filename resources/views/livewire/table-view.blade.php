@@ -51,9 +51,15 @@
                         <input wire:model.live="selectedItems" value="{{ $row->id }}" type="checkbox">
                     </td>
                     @foreach ($row as $key => $value)
-                        <td class="text-start p-3">
-                            {{$value }}
-                        </td>
+                        @if ($tableClassInstance->isNotHidden($key))
+                            <td class="text-start p-3">
+                                @if ($tableClassInstance->fieldHasLink($key))
+                                    {!! $tableClassInstance->setLinkParams($row, $key, $value)->make() !!}
+                                @else
+                                    {{ $value }}
+                                @endif
+                            </td>
+                        @endif
                     @endforeach
                 </tr>
             @endforeach

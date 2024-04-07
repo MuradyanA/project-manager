@@ -10,7 +10,8 @@ use Livewire\Attributes\Rule;
 use Livewire\Attributes\On;
 use App\Services\Exceptions\ServiceException;
 use App\Enums\NotificationType;
-
+use App\Services\Forms\FormBuilder;
+use App\Services\Forms\FormTextInput;
 
 class Customers extends Component
 {
@@ -73,7 +74,19 @@ class Customers extends Component
         }
     }
 
-
+    public function createBuilder()
+    {
+        $builder = new FormBuilder('saveCustomer');
+        $builder
+            ->addTitle($this->customerForm->id ? 'Update Customer' : 'Create Customer ')
+            ->addInput(
+                new FormTextInput('customerForm.id', 'ID', 'text', (bool) $this->customerForm->id, true, true),
+            )
+            ->addInput(new FormTextInput('customerForm.fullName', 'Name', 'text'))
+            ->addInput(new FormTextInput('customerForm.email', 'Email', 'text'))
+            ->addInput(new FormTextInput('customerForm.phoneNumber', 'Phone Number', 'text'));
+        return $builder;
+    }
 
 
     public function render()

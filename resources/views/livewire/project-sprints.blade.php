@@ -1,13 +1,17 @@
 <div>
+    <livewire:notification />
     <div class="italic sticky top-20">
         <div class="w-full h-auto bg-[#367a76]  p-5 text-center">
             <a href="/projects/{{ $project->id }}"
                 class="text-gray-100 text-2xl px-[2%] cursor-pointer duration-300">Project</a>
             <a href="/projects/{{ $project->id }}/sprints"
-                class="text-gray-100 text-2xl px-[2%] cursor-pointer duration-300">Sprint</a>
+                class="text-gray-100 text-2xl px-[2%] cursor-pointer duration-300">Sprints</a>
         </div>
     </div>
-    <div class="flex flex-col bg-[#a1d5cc] p-8 text-center justify-center gap-2">
+    <div>
+        <livewire:table-view :key="$tableKey" tableClass="{{ App\Services\TableViews\SprintsTable::class }}" />
+    </div>
+    {{-- <div class="flex flex-col bg-[#a1d5cc] p-8 text-center justify-center gap-2">
         <h1 class="italic text-3xl font-bold text-center text-gray-800">Current Sprint</h1>
         <div>
             <select wire:model.change='currentSprintID'
@@ -61,5 +65,5 @@
                 </div>
             @endforeach
     @endif
-</div>
+</div> --}}
 </div>

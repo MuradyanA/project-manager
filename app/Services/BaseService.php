@@ -26,7 +26,6 @@ class BaseService
 
     protected function validate($actionName)
     {
-        // dd($this->fields, static::getValidationRules($actionName));
         $validator = Validator::make($this->fields, static::getValidationRules($actionName));
         $additionalValidationCallbacks = $this->getAdditionalValidationCallbacks($actionName);
         if (count($additionalValidationCallbacks) > 0) {
@@ -42,9 +41,12 @@ class BaseService
     public static function getValidationRules($actionName)
     {
         $validationRules = static::VALIDATION_RULES;
+
         if ($actionName == 'update') {
             $validationRules['id'] = ['required'];
             foreach ($validationRules as $key => $value) {
+                if (gettype($value) == 'string')
+                    $value = explode('|', $value);
                 array_unshift($value, 'sometimes');
                 $validationRules[$key] = $value;
             }
@@ -84,7 +86,7 @@ class BaseService
     {
     }
 
-    protected function getAdditionalValidationCallbacks($actionName): array
+    protected function getAdditionalValidationCallbacks($actionName): ?array
     {
         return [];
     }

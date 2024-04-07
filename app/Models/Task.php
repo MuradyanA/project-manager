@@ -32,14 +32,15 @@ class Task extends Model
         'projectId',
         'requestId',
         'sprintId',
-        'task',
-        'userIdAssignedToTask',
+        'title',
+        'body',
+        'status',
         'start',
         'end',
     ];
 
     public function assignedUsers()
-{
-    return $this->hasMany(User::class, 'id', 'userIdAssignedToTask');
-}
+    {
+        return $this->hasMany(User::class, 'id', 'userIdAssignedToTask');
+    }
 }

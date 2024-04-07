@@ -74,7 +74,7 @@ class CommentService extends BaseService
         }
     }
 
-    public function confirmSubmitReply($commentId, $repliedComment, $thisTask, $userId)
+    public function confirmSubmitReply($commentId, $repliedComment, $commentableID, $commentableType, $userId)
     {
         $parentComment = Comment::findOrFail($commentId);
         Comment::create([
@@ -82,8 +82,8 @@ class CommentService extends BaseService
             'comment' => $repliedComment,
             'replyTo' => $parentComment->id,
             'main_comment' => is_null($parentComment->main_comment) ? $parentComment->id : $parentComment->main_comment,
-            'commentable_id' => $thisTask->id,
-            'commentable_type' => Task::class
+            'commentable_id' => $commentableID,
+            'commentable_type' => $commentableType
         ]);
     }
 

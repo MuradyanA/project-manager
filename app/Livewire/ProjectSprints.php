@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Enums\NotificationType;
 use App\Models\Project;
 use App\Models\Request;
 use App\Models\Sprint;
@@ -9,6 +10,7 @@ use App\Models\Task;
 use App\Models\TaskUser;
 use App\Models\User;
 use App\Services\Exceptions\ServiceException;
+use App\Services\SprintService;
 use App\Services\TaskUserAssociationService;
 use Livewire\Component;
 use Livewire\Attributes\Rule;
@@ -37,12 +39,15 @@ class ProjectSprints extends Component
     #[Rule('int|exists:sprints,id')]
     public $sprintId;
 
+    public $tableKey = 'Sprints';
+
     public function mount(Project $project)
     {
         $this->project = $project;
         $this->sprints = Sprint::where('projectId', $this->project->id)->get();
         $lastSprintID = $this->sprints->max('id');
-        $this->currentSprint = Sprint::find($lastSprintID)->load('tasks');
+        $this->currentSprint = Sprint::find($lastSprintID);
+        $this->currentSprint->load('tasks');
         $this->currentSprintID = $this->currentSprint->id;
         $users = User::where('role', '!=', 'Project Owner')->get();
         $this->users = $users;
@@ -72,6 +77,22 @@ class ProjectSprints extends Component
         // dd($propertyName);
         if ($propertyName == 'currentSprintID') {
             $this->currentSprint = Sprint::find($this->currentSprintID)->load('tasks');
+        }
+    }
+
+    #[On('Delete')]
+    public function deleteSprint($items)
+    {
+        try {
+            (new SprintService())->loadFieldValues(['id' => $items[0]])->delete();
+            $this->tableKey = rand();
+        } catch (ServiceException $e) {
+            // $this->addError('ValidationError', $e->getMessage());
+            $this->dispatch(
+                'displayNotification',
+                message: $e->getMessage(),
+                type: NotificationType::Alert
+            )->to(\App\Livewire\Notification::class);
         }
     }
 
@@ -120,8 +141,6 @@ class ProjectSprints extends Component
 
     public function render()
     {
-        // dd($this->currentSprintID);
-        // $this->sprints = Sprint::
         return view('livewire.project-sprints');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Sprint;
+use App\Models\Task;
 
 class SprintService extends BaseService
 {
@@ -17,8 +18,10 @@ class SprintService extends BaseService
 
     protected function beforeAction($actionName)
     {
-        $sprintNumber = Sprint::where('projectId', $this->fields['projectId'])->max('sprint') ?? 0;
-        $this->fields['sprint'] = ++$sprintNumber;
+        if ($actionName == 'create') {
+            $sprintNumber = Sprint::where('projectId', $this->fields['projectId'])->max('sprint') ?? 0;
+            $this->fields['sprint'] = ++$sprintNumber;
+        }
     }
 
     protected function getAdditionalValidationCallbacks($actionName): array
@@ -32,12 +35,25 @@ class SprintService extends BaseService
                         if (Sprint::whereBetween('start', [$this->fields['start'], $this->fields['end']])->orWhereBetween('end', [$this->fields['start'], $this->fields['end']])->exists()) {
                             $validator->errors()->add('additionalValidationError', "Sprint's start or end dates overlap an existing sprint(s).");
                         }
-                        
+                    }
+                ];
+            case 'delete':
+                return [
+                    function ($validator) {
+                        if (Task::where([
+                            ['status', '!=', 'Proposed'],
+                            ['sprintId', '=', $this->fields['id']]
+                        ])->exists()){
+                            $validator->errors()->add('additionalValidationError', "Sprint can't be deleted whether it doesn't have a task, or all the tasks have proposed state");
+                        }
+                        $sprint =  Sprint::findOrFail($this->fields['id']);
+                        if(Sprint::where('projectId', $sprint->projectId)->max('sprint') != $sprint->sprint){
+                            $validator->errors()->add('additionalValidationError', "Only last sprint can be deleted");
+                        }   
                     }
                 ];
             default:
                 return [];
         }
     }
-
 }

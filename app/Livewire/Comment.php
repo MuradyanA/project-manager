@@ -31,11 +31,11 @@ class Comment extends Component
 
     public $likesDislikes = [];
 
-    public $openedReplyForms;
+    public $openedReplyForms = [];
 
-    public $showRepliedComments;
+    public $showRepliedComments = [];
 
-    public $repliedRepliedComments;
+    public $repliedRepliedComments = [];
 
     public $repliedComments;
 
@@ -52,23 +52,15 @@ class Comment extends Component
     public $currentProject;
 
 
-    public function mount($commentableType, $commentableId, $comments, $currentTask, $likesDislikes, $openedReplyForms, $showRepliedComments, $repliedRepliedComments, $isRepliedCommentsShown, $currentProject)
+    public function mount($commentableType, $commentableId)
     {
         $this->commentableType = $commentableType;
         $this->commentableId = $commentableId;
-        $this->comments = $comments;
-        $this->currentTask = $currentTask;
-        $this->currentProject = $currentProject;
-        $this->likesDislikes = $likesDislikes;
-        $this->openedReplyForms = $openedReplyForms;
-        $this->showRepliedComments = $showRepliedComments;
-        $this->repliedRepliedComments = $repliedRepliedComments;
-        $this->isRepliedCommentsShown = $isRepliedCommentsShown;
     }
 
     public function render()
     {
-        $mainComments = CommentModel::whereNull('main_comment')->where(['commentable_id' => $this->commentableId, 'commentable_type' => Task::class])->select('comments.id', 'comments.commenterId', 'comments.comment', 'comments.replyTo', 'comments.main_comment', 'comments.commentable_id', 'comments.commentable_type', 'users.name as commenterName')->join('users', 'users.id', '=', 'comments.commenterId')->orderBy('comments.created_at', 'desc')->get();
+        $mainComments = CommentModel::whereNull('main_comment')->where(['commentable_id' => $this->commentableId, 'commentable_type' => $this->commentableType])->select('comments.id', 'comments.commenterId', 'comments.comment', 'comments.replyTo', 'comments.main_comment', 'comments.commentable_id', 'comments.commentable_type', 'users.name as commenterName')->join('users', 'users.id', '=', 'comments.commenterId')->orderBy('comments.created_at', 'desc')->get();
         $repliedComments = CommentModel::whereIn('main_comment', $mainComments->pluck('id')->all())
             ->join('users', 'comments.commenterId', '=', 'users.id')
             ->select('comments.*', 'users.name as commenter_name')
@@ -91,7 +83,6 @@ class Comment extends Component
     {
         $this->isRepliedCommentsShown = !$this->isRepliedCommentsShown;
         if (!in_array($commentId, $this->showRepliedComments)) {
-            // $this->isRepliedCommentsShown = true;
             array_push($this->showRepliedComments, $commentId);
             $this->repliedRepliedComments = array_diff($this->repliedRepliedComments, $this->repliedRepliedComments);
         } else {
@@ -112,15 +103,15 @@ class Comment extends Component
         }
     }
 
-    public function showLikers($commentId)
-    {
-        $this->openLikersForm = true;
-        $likers = LikeDislike::where(['likeable_id' => $commentId, 'likeable_type' => Task::class, 'action' => 1])->pluck('commenterId')->toArray();
-        foreach ($likers as $liker) {
-            $likerName = User::where('id', $liker)->pluck('name')->first();
-            $this->likers[] = $likerName;
-        }
-    }
+    // public function showLikers($commentId)
+    // {
+    //     $this->openLikersForm = true;
+    //     $likers = LikeDislike::where(['likeable_id' => $commentId, 'likeable_type' => Task::class, 'action' => 1])->pluck('commenterId')->toArray();
+    //     foreach ($likers as $liker) {
+    //         $likerName = User::where('id', $liker)->pluck('name')->first();
+    //         $this->likers[] = $likerName;
+    //     }
+    // }
 
     public function submitReply($commentId)
     {
@@ -128,14 +119,14 @@ class Comment extends Component
             'repliedComment' => "required|string",
         ]);
         $commentService = new CommentService();
-        $commentService->confirmSubmitReply($commentId, $this->repliedComment, $this->currentTask, auth()->id());
+        $commentService->confirmSubmitReply($commentId, $this->repliedComment, $this->commentableId, $this->commentableType, auth()->id());
     }
 
-    public function closeShowLikers()
-    {
-        $this->likers = [];
-        $this->openLikersForm = false;
-    }
+    // public function closeShowLikers()
+    // {
+    //     $this->likers = [];
+    //     $this->openLikersForm = false;
+    // }
 
     public function save()
     {

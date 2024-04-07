@@ -6,6 +6,8 @@ use Carbon\Carbon;
 use Livewire\WithPagination;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use App\Enums\NotificationType;
+
 
 class TableView extends Component
 {
@@ -29,7 +31,7 @@ class TableView extends Component
         $this->search = "";
     }
 
-    
+
     public function updated($propName, $value)
     {
         $this->selectedItems =  array_filter($this->selectedItems, fn ($el) => $el != $value);
@@ -46,11 +48,21 @@ class TableView extends Component
     {
         if (count($this->selectedItems)) {
             $this->dispatch($actionName, $this->selectedItems, $this->tableClass);
+        } else {
+            $this->dispatch(
+                'displayNotification',
+                message: 'Please select item(s).',
+                type: NotificationType::Alert
+            )->to(\App\Livewire\Notification::class);
         }
     }
 
     public function render()
     {
-        return view('livewire.table-view', ['data' => (new $this->tableClass)->render($this->search)]);
+        $tableClassInstance = new $this->tableClass;
+        return view('livewire.table-view', [
+            'data' => $tableClassInstance->render($this->search),
+            'tableClassInstance' => $tableClassInstance
+        ]);
     }
 }

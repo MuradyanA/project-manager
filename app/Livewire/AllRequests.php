@@ -8,20 +8,34 @@ use App\Models\Request;
 use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
+use App\Services\HyperLinkCreator;
 use App\Services\TaskService;
+use App\Services\ViewDetails\ButtonCreator;
 use Livewire\Component;
 use Livewire\Attributes\Rule;
 use App\Livewire\Traits\WithServiceMethods;
+use App\Livewire\Traits\WithViewDetailsView;
 use App\Services\Exceptions\ServiceException;
 use App\Services\RequestService;
 use Carbon\Carbon;
 use Livewire\Attributes\On;
 use App\Enums\NotificationType;
-
+use App\Services\Forms\FormBuilder;
+use App\Services\ViewDetails\DetailsViewBuilder;
+use App\Services\Forms\FormButton;
+use App\Services\Forms\FormTextArea;
+use App\Services\Forms\FormTextInput;
+use App\Services\ViewDetails\CommentsViewData;
+use App\Services\ViewDetails\InfoViewData;
+use App\Services\ViewDetails\BlockInfoViewData;
+use App\Services\ViewDetails\GridInfoViewData;
+use App\Services\SprintService;
+use Illuminate\Support\Facades\DB;
 
 class AllRequests extends Component
 {
-    use WithServiceMethods;
+    // use WithServiceMethods;
+    use WithViewDetailsView;
     private string $serviceClass = RequestService::class;
     public ChangeRequestForm $form;
     public SprintForm $sprintForm;
@@ -31,6 +45,8 @@ class AllRequests extends Component
     public $project;
     public $sprints;
     public $currentSprint;
+
+    public array $selectedChangeRequests = [];
 
     #[Rule('required|date|after_or_equal:today')]
     public $sprintStart = "";
@@ -46,7 +62,6 @@ class AllRequests extends Component
 
     public $tableKey;
 
-
     public $selectedRows = [];
     public $isOpenedNewSprintForm = false;
     public $isOpenedNewRequestForm = false;
@@ -60,11 +75,54 @@ class AllRequests extends Component
     }
 
     #[On('AddToNewSprint')]
-    public function createSprintAndTasks($items)
+    public function showAddToSprintForm($items)
     {
+
+        $this->isOpenedNewSprintForm = true;
+        $this->selectedChangeRequests = $items;
+    }
+
+    private function createTasks($items, $sprint)
+    {
+        foreach ($items as $requestId) {
+            $request = Request::findOrFail($requestId);
+            (new TaskService())->loadFieldValues([
+                'projectId' => $this->project->id,
+                'requestId' => $request->id,
+                'sprintId' => $sprint->id,
+                'title' => $request->title,
+                'body' => $request->request,
+                'start' => $sprint->start,
+                'end' => $sprint->end,
+            ])->create();
+        }
+    }
+
+    public function createSprintAndTasks()
+    {
+        $this->sprintForm->validate();
         try {
-            $this->isOpenedNewSprintForm = true;
-            $task = (new TaskService())->createTasksAndSprintFromRequest($this->project->id, $items, Carbon::parse($this->sprintForm->start), Carbon::parse($this->sprintForm->end));
+            $this->sprintForm->validate();
+            $sprintDates = $this->sprintForm->all();
+            DB::transaction(function () use ($sprintDates) {
+                // dd($sprintStart, $sprintEnd);
+                $sprint = (new SprintService())->loadFieldValues([
+                    'projectId' => $this->project->id,
+                    'start' => $sprintDates['start'],
+                    'end' => $sprintDates['end']
+                ])->create();
+                $this->createTasks($this->selectedChangeRequests, $sprint);
+            });
+            // (new TaskService())->createTasksAndSprintFromRequest($this->project->id, $this->selectedChangeRequests, Carbon::parse($this->sprintForm->start), Carbon::parse($this->sprintForm->end));
+            $this->dispatch(
+                'displayNotification',
+                message: 'Sprint and Tasks has been created and added!',
+                type: NotificationType::Information
+            )->to(\App\Livewire\Notification::class);
+
+            $this->tableKey = rand();
+            $this->isOpenedNewSprintForm = false;
+            $this->sprintForm->reset();
         } catch (ServiceException $e) {
             $this->dispatch(
                 'displayNotification',
@@ -79,13 +137,17 @@ class AllRequests extends Component
     {
         $sprint = Sprint::where('projectId', $this->project['id'])->latest()->first();
         try {
-            (new TaskService())->createTasksForSprint($items, $sprint);
+            $this->createTasks($items, $sprint);
+            // (new TaskService())->createTasksForSprint($items, $sprint);
             $this->dispatch(
                 'displayNotification',
-                message: 'Tasks has been created and added!',
+                message: 'Tasks has been created and added to the last sprint!',
                 type: NotificationType::Information
             )->to(\App\Livewire\Notification::class);
+
             $this->tableKey = rand();
+            $this->isOpenedNewSprintForm = false;
+            $this->sprintForm->reset();
         } catch (ServiceException $e) {
             $this->dispatch(
                 'displayNotification',
@@ -95,87 +157,96 @@ class AllRequests extends Component
         }
     }
 
-    // public function createTask()
-    // {
-    // }
+    #[On('Delete')]
+    public function deleteRequest($items)
+    {
+        try {
+            (new RequestService())->loadFieldValues(['id' => $items[0]])->delete();
+            $this->tableKey = rand();
+        } catch (ServiceException $e) {
+            // $this->addError('ValidationError', $e->getMessage());
+            $this->dispatch(
+                'displayNotification',
+                message: $e->getMessage(),
+                type: NotificationType::Alert
+            )->to(\App\Livewire\Notification::class);
+        }
+    }
 
-    // public function createNewRequest()
-    // {
-    //     $this->validate([
-    //         'newRequestTitle' => "required|string",
-    //         'newRequest' => "required|string"
-    //     ]);
-    //     Request::create([
-    //         'projectId' => $this->project->id,
-    //         'requesterId' => auth()->id(),
-    //         'title' => $this->newRequestTitle,
-    //         'request' => $this->newRequest,
-    //     ]);
-    //     $this->isOpenedNewRequestForm = false;
-    //     return redirect()->to('/projects' . '/' . $this->project->id)
-    //         ->with('status', 'Request created!');
-    // }
+    public function createChangeRequestBuilder()
+    {
+        $builder = new FormBuilder('createChangeRequest()', 'static');
+        $builder
+            ->addTitle("Create New Change Request")
+            ->addInput(new FormTextInput('form.title', 'Request Title', 'text'))
+            ->addInput(new FormTextArea('form.request', 'Request Body', 'text'))
+            ->addButton(new FormButton('Close', 'closeNewSprintDialog'));
+        return $builder;
+    }
 
-    // public function createNewSprint()
-    // {
-    //     $this->validate([
-    //         'sprintStart' => "required|date|after_or_equal:today",
-    //         'sprintEnd' => "required|date|after_or_equal:sprintStart"
-    //     ]);
+    public function removeTask()
+    {
+        $task = Task::where('requestId', $this->showDetails)->first();
+        try {
+            (new TaskService)->loadFieldValues(['id' => $task->id])->delete();
+        } catch (ServiceException $e) {
+            $this->dispatch(
+                'displayNotification',
+                message: $e->getMessage(),
+                type: NotificationType::Alert
+            )->to(\App\Livewire\Notification::class);
+        }
+    }
 
-    //     $lastSprint = Sprint::where('projectId', $this->project->id)->latest()->first();
+    public function createBuilder()
+    {
+        $builder = new FormBuilder('createSprintAndTasks()', 'fixed');
+        $builder
+            ->addTitle("Create New Sprint And Tasks")
+            ->addInput(new FormTextInput('sprintForm.start', 'Sprint Start', 'date'))
+            ->addInput(new FormTextInput('sprintForm.end', 'Sprint End', 'date'))
+            ->addButton(new FormButton('Close', 'closeNewSprintDialog'));
+        return $builder;
+    }
 
-    //     if ($lastSprint == null) {
-    //         foreach ($this->selectedRows as $rowId) {
-    //             $request = Request::where('id', $rowId)->first();
-    //             $newSprint = Sprint::create([
-    //                 'projectId' => $this->project->id,
-    //                 'requestId' => $rowId,
-    //                 'sprint' => 1,
-    //                 'start' => $this->sprintStart,
-    //                 'end' => $this->sprintEnd,
-    //             ]);
+    public function getDetailsViewBuilder()
+    {
+        $requestText = Request::findOrFail($this->showDetails);
+        $associatedTask = Task::where('requestId', $this->showDetails)->first();
+        $associatedTaskLink = is_null($associatedTask) ? "No associated task." : (new HyperLinkCreator('tasks'))->setParams($associatedTask['title'], ['showDetails' => $associatedTask['id']]);
 
-    //             // Create a new task for the current sprint
-    //             Task::create([
-    //                 'projectId' => $this->project->id,
-    //                 'requestId' => $rowId,
-    //                 'sprintId' => $newSprint->id,
-    //                 'task' => $request->request, // Replace with the actual task description
-    //                 'start' => $this->sprintStart,
-    //                 'end' => $this->sprintEnd,
-    //             ]);
-    //         }
-    //     } elseif ($lastSprint['end'] < $this->sprintEnd && $this->sprintStart > $lastSprint['end']) {
-    //         foreach ($this->selectedRows as $rowId) {
-    //             $request = Request::where('id', $rowId)->first();
-    //             $newSprint = Sprint::create([
-    //                 'projectId' => $this->project->id,
-    //                 'requestId' => $rowId,
-    //                 'sprint' => $lastSprint['sprint'] + 1,
-    //                 'start' => $this->sprintStart,
-    //                 'end' => $this->sprintEnd,
-    //             ]);
+        $generalSectionData = [
+            'assocTask' => $associatedTaskLink
+        ];
 
-    //             // Create a new task for the current sprint
-    //             Task::create([
-    //                 'projectId' => $this->project->id,
-    //                 'requestId' => $rowId,
-    //                 'sprintId' => $newSprint->id,
-    //                 'task' => $request->request, // Replace with the actual task description
-    //                 'start' => $this->sprintStart,
-    //                 'end' => $this->sprintEnd,
-    //             ]);
-    //         }
-    //     }
+        if (!is_null($associatedTask)) {
+            $generalSectionData[] = new ButtonCreator('Delete Task', 'removeTask', 'Are you sure to delete the currrent task?');
+            $generalSectionData['status'] = $associatedTask->status;
+        }
 
-    //     return redirect()->to('/projects' . '/' . $this->project->id)
-    //         ->with('status', 'Project created!');
-    // }
-    public function closeNewSprintForm()
+        return (new DetailsViewBuilder())
+            ->addPage('General')
+            ->addPage('Info')
+            ->addSection(
+                'General',
+                new GridInfoViewData($generalSectionData, 'Info', ['assocTask' => 'Associated Task'])
+            )->addSection('General', new BlockInfoViewData(
+                'Request Details',
+                $requestText->title,
+                $requestText->request
+            ))
+            ->addSection('General', new CommentsViewData(
+                'Comments',
+                Request::class,
+                $this->showDetails
+            ));
+    }
+
+    public function closeNewSprintDialog()
     {
         $this->isOpenedNewSprintForm = false;
     }
+
 
     public function closeNewRequestForm()
     {

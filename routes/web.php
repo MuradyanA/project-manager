@@ -39,9 +39,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/projects/view/{request}', ViewRequest::class);
     Route::get('/projects/view/{project}', ViewRequest::class);
     Route::get('/projects/{project}/sprints', ProjectSprints::class);
-    Route::get('/projects/{project}/view/task/{task}', ViewTask::class);
-    // Route::get('/view/task/replies/{replied_comment}', ViewRepliedComments::class);  
+    Route::get('/tasks', ViewTask::class)->name('tasks');
     Route::get('/users/create', CreateUser::class);
-    Route::get('/customers', Customers::class);
+    Route::get('/customers', Customers::class)->name('customers');
     Route::get('/home', Home::class)->name('home');
 });
