@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use Faker\Core\File;
 use Illuminate\Support\ServiceProvider;
+use App\Services\Synthesizers\FilterSynth;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +22,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Livewire::propertySynthesizer(FilterSynth::class);
     }
 }

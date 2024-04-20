@@ -3,12 +3,22 @@
 namespace App\Services\TableViews;
 
 use App\Services\HyperLinkCreator;
+use App\Services\Filter;
+use App\Services\TableViews\Buttons\FilterButton;
 
 abstract class TableView implements TableInterface
 {
     protected array $links = [];
 
-protected array $hiddenFields = [];
+    protected static array $toolbarButtons = [];
+
+    protected array $hiddenFields = [];
+
+    public function __construct(public ?Filter $filter=null) {
+        if(!is_null($filter)){
+            static::$toolbarButtons[] = new FilterButton();
+        }
+    }
 
     abstract public static function getToolbarButtons();
 

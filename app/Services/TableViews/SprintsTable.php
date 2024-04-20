@@ -44,6 +44,7 @@ class SprintsTable extends TableView
         if ($keyword) {
             $query->where('Status', 'like', "%$keyword%");
         }
+        // $this->filter->applyFilter($query);
         return $query->simplePaginate(15);
     }
 }

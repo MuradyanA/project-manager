@@ -4,8 +4,6 @@ namespace Tests\Feature;
 
 use App\Livewire\AllRequests;
 use App\Models\Request;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use App\Models\User;
 use App\Models\Sprint;
 use App\Models\Customer;
@@ -14,10 +12,13 @@ use App\Services\TableViews\ChangeRequestsTable;
 use Tests\TestCase;
 use Livewire\Livewire;
 use App\Livewire\TableView;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
 
 
 class RequestsTest extends TestCase
 {
+    use RefreshDatabase;
     public function test_that_requests_page_is_available_only_for_authenticated_users(): void
     {
         $request = Request::factory(count: 1)->create()->first();

@@ -30,6 +30,11 @@
             @endforeach
         </div>
     </div>
+    <div class="flex justify-center">
+        @if (!is_null($filter) && $showFilter)
+            <x-filter-view :filter="$filter" />
+        @endif
+    </div>
     <div class="flex flex-rows justify-center">
         <table>
             <tr class="bg-gray-500 text-gray-200 rounded-md">

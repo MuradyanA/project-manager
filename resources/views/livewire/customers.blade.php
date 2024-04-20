@@ -7,5 +7,5 @@
             </div>
         </div>
     </div>
-    <livewire:table-view :key="$tableKey" tableClass="{{ App\Services\TableViews\CustomersTable::class }}" />
+    <livewire:table-view :key="$tableKey" :filter="$filter" tableClass="{{ App\Services\TableViews\CustomersTable::class }}" />
 </div>

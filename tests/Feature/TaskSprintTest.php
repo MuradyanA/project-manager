@@ -12,19 +12,19 @@ use Livewire\Livewire;
 
 class TaskSprintTest extends TestCase
 {
-    // use RefreshDatabase;
+    use RefreshDatabase;
 
-    // public function test_that_tasks_page_is_available_only_for_authenticated_users(): void
-    // {
-    //     $sprint = Sprint::factory()->create();
-    //     $this->get("/projects/$sprint->projectId/sprints")
-    //         ->assertStatus(302)
-    //         ->assertRedirect('/signIn');
+    public function test_that_tasks_page_is_available_only_for_authenticated_users(): void
+    {
+        $sprint = Sprint::factory()->create();
+        $this->get("/projects/$sprint->projectId/sprints")
+            ->assertStatus(302)
+            ->assertRedirect('/signIn');
 
-    //     $user = User::factory()->create();
+        $user = User::factory()->create();
 
-    //     $this->actingAs($user)->get("/projects/$sprint->projectId/sprints")->assertStatus(200);
-    // }
+        $this->actingAs($user)->get("/projects/$sprint->projectId/sprints")->assertStatus(200);
+    }
 
     // public function test_that_user_can_be_added_to_the_task()
     // {

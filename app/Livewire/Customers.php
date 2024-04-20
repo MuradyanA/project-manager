@@ -12,25 +12,20 @@ use App\Services\Exceptions\ServiceException;
 use App\Enums\NotificationType;
 use App\Services\Forms\FormBuilder;
 use App\Services\Forms\FormTextInput;
+use App\Services\Filter;
 
 class Customers extends Component
 {
-    // #[Rule('required|string')]
-    // public $fullName = "";
-
-    // #[Rule('required|email')]
-    // public $email = "";
-
-    // #[Rule('required|numeric|min:11')]
-    // public $phoneNumber = "";
-
     public $tableKey;
+
+    public Filter $filter;
 
     public CustomerForm $customerForm;
 
     public function mount()
     {
         $this->tableKey = rand();
+        $this->filter = new Filter(['fullName', 'email', 'phoneNumber'], ['id'], dateTimeFields: ['created_at'], f : 'custF');
     }
 
     #[On('Edit')]
